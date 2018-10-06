@@ -202,10 +202,10 @@ define(["../core/Tone", "../core/Buffer", "../source/Source", "../source/TickSou
 
 		//compute the values in seconds
 		offset = this.toSeconds(offset);
-		var computedDuration = Tone.defaultArg(duration, Math.max(this._buffer.duration - offset, 0));
+
+		//compute buffer duration by playbackRate and offset
+		var computedDuration = Tone.defaultArg(duration, Math.max((this._buffer.duration / this._playbackRate) - offset, 0));
 		computedDuration = this.toSeconds(computedDuration);
-		//scale it by the playback rate
-		computedDuration = computedDuration / this._playbackRate;
 
 		//get the start time
 		startTime = this.toSeconds(startTime);
@@ -433,10 +433,15 @@ define(["../core/Tone", "../core/Buffer", "../source/Source", "../source/TickSou
 			this._playbackRate = rate;
 			var now = this.now();
 			this._elapsedTime.frequency.setValueAtTime(rate, now);
+
 			//if it's not looping
+			/* the following code sets the buffer stop position N times, then halts. 
+			   accurate stop times cease to be applied from that point forward
 			if (!this._loop){
 				this._stopAtNextIteration(now);
 			}
+			*/
+
 			//set all the sources
 			this._activeSources.forEach(function(source){
 				source.playbackRate.setValueAtTime(rate, now);
