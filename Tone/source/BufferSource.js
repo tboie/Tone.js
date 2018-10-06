@@ -211,15 +211,23 @@ define(["../core/Tone", "../core/Buffer", "../source/Source", "../core/Gain",
 
 		this._startTime = time;
 
+		//buffer duration with playbackRate accounted for 
+		var bufferDur = this.buffer.duration / this.playbackRate.value;
+
 		//if a duration is given, schedule a stop
 		if (Tone.isDefined(duration)){
 			var computedDur = this.toSeconds(duration);
 			//make sure it's never negative
 			computedDur = Math.max(computedDur, 0);
 
-			//when not looping, the duration should be no more than the buffer.duration
+			//when not looping, the duration should be no more than the buffer duration
 			if (!this.loop){
-				computedDur = Math.min(computedDur, this.buffer.duration - (offset % this.buffer.duration));
+				if(offset < bufferDur){
+					var computedBufferDur = bufferDur - (offset % bufferDur);
+					if(computedDur > computedBufferDur){
+						computedDur = computedBufferDur;
+					}
+				}
 			}
 			this.stop(time + computedDur);
 		}
@@ -237,9 +245,11 @@ define(["../core/Tone", "../core/Buffer", "../source/Source", "../core/Gain",
 		}
 		this._source.buffer = this.buffer.get();
 		this._source.loopEnd = this.loopEnd || this.buffer.duration;
-		if (offset < this.buffer.duration){
+
+		//start the buffer. adjust the offset according to playbackRate
+		if (offset < bufferDur){
 			this._sourceStarted = true;
-			this._source.start(time, offset);
+			this._source.start(time, offset * this.playbackRate.value);
 		}
 
 		return this;
